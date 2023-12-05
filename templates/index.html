@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Dehazing Project</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous">
+    <style>
+        body {
+            background-color: #000000; /* Black background */
+            color: #ffffff; /* White text */
+        }
+
+        #project {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.3s;
+            background-color: #2f3059; /* Dark purple background */
+        }
+
+        #project:hover {
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+        }
+
+        #loadingSpinner {
+            display: none;
+        }
+
+        #videoInputSection,
+        #outputSection {
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        #videoInputSection {
+            background-color: #6a4c93; /* Purple background */
+        }
+
+        .btn-primary {
+            background-color: #ff6f61; /* Coral orange */
+            border-color: #ff6f61;
+        }
+
+        .btn-primary:hover {
+            background-color: #e85a4f; /* Darker coral orange on hover */
+            border-color: #e85a4f;
+        }
+
+        #outputSection {
+            background-color: #6a4c93; /* Purple background */
+        }
+
+        #output,
+        #error {
+            font-weight: bold;
+            display: none;
+            margin-top: 20px;
+            color: #ff6f61; /* Coral orange */
+        }
+
+        #outputVideo {
+            width: 100%;
+            display: none;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        h2 {
+            color: #ff6f61; /* Coral orange */
+        }
+    </style>
+</head>
+<body>
+    <div id="project" class="container">
+        <h2 class="text-center mb-4">Video Dehazing Project</h2>
+        <div id="videoInputSection" class="mb-4">
+            <label for="videoInput" class="form-label">Select Video File</label>
+            <input type="file" class="form-control" id="videoInput" accept="video/*">
+            <button class="btn btn-primary mt-3" onclick="dehazeVideo()">Dehaze Video</button>
+            <div id="loadingSpinner" class="mt-3 text-center">
+                <div class="spinner-border text-danger" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+      </div>
+        <div id="outputSection">
+            <div id="error" class="alert alert-danger"></div>
+            <video controls id="outputVideo"></video>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-eVZwwn5hAgq6Ad1nLT5mW5Z4i+bqm9aTHpR9zUqjNqz1qf6G2TqN0fb4sazT8NRo" crossorigin="anonymous"></script>
+    <script>
+        function dehazeVideo() {
+            const videoInput = document.getElementById('videoInput');
+            const outputVideo = document.getElementById('outputVideo');
+            const errorDiv = document.getElementById('error');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+
+            errorDiv.style.display = 'none';
+            outputVideo.style.display = 'none';
+
+            if (videoInput.files.length === 0) {
+                errorDiv.textContent = 'Please select a video file.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            loadingSpinner.style.display = 'inline-block';
+
+            const videoFile = videoInput.files[0];
+            const formData = new FormData();
+            formData.append('video', videoFile);
+
+            fetch('/video-dehazing-endpoint', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                loadingSpinner.style.display = 'none';
+                const videoUrl = URL.createObjectURL(blob);
+                outputVideo.src = videoUrl;
+                outputVideo.style.display = 'block';
+            })
+            .catch(error => {
+                loadingSpinner.style.display = 'none';
+                errorDiv.textContent = `Error: ${error.message}`;
+                errorDiv.style.display = 'block';
+            });
+        }
+    </script>
+</body>
+</html>
